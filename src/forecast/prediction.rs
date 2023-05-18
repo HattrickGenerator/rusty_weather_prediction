@@ -1,4 +1,4 @@
 
 #[derive(Debug)]
-struct Potatoe {}
+pub struct Potatoe {}
 

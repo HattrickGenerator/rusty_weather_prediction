@@ -1,8 +1,8 @@
-use crate::forecast::forecast::Asparagus;
+use crate::forecast::forecast::prediction::Potatoe;
 
 pub mod forecast;
 
 fn main() {
-    let plant = Asparagus {};    
+    let plant = Potatoe {};    
     println!("I'm growing {:?}!", plant);
 }
