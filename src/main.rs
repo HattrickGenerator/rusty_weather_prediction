@@ -1,58 +1,41 @@
-pub mod forecast;
-use codespan_reporting::term::{
-    emit,
-    termcolor::{ColorChoice, StandardStream},
-};
-use std::io::Read;
+extern crate reqwest;
+extern crate forecast;
 
-use weather_reports::parse::metar;
+use reqwest::Client;
+
+use forecast::{ApiClient, ForecastRequestBuilder,
+               TimeMachineRequestBuilder, ExcludeBlock, ExtendBy,
+               Lang, Units};
+
+const LAT: f64 = 6.66;
+const LONG: f64 = 66.6;
+const TIME: u64 = 666;
 
 fn main() {
-    let filename : String = "/home/michael/git/rusty_weather_prediction/example_metar".to_string();
+    //code piece taken from:
 
-    let report: String = match filename.as_ref() {
-        "-" => {
-            eprintln!("Reading from stdin");
-            let mut acc = String::default();
-            std::io::stdin().read_to_string(&mut acc).unwrap();
-            acc
-        }
-        filename => std::fs::read_to_string(&filename).expect("file isn't readable"),
-    };
+    let api_key = "my_dark_sky_api_key"; // please don't actually hardcode your API key!
 
-    if cfg!(feature = "trace") {
-        println!("[PEG_INPUT_START]");
-        println!("{}", report);
-        println!("[PEG_TRACE_START]");
-    }
+    let reqwest_client = Client::new();
+    let _api_client = ApiClient::new(&reqwest_client);
 
-    match metar(&report) {
-        Ok(ast) => {
-            if !cfg!(feature = "trace") {
-                println!("{:#?}", ast);
-            }
-            eprintln!("Success!");
-        }
-        Err(err) => {
-            let mut writer = StandardStream::stderr(ColorChoice::Auto);
-            let config = codespan_reporting::term::Config::default();
-            emit(
-                &mut writer,
-                &config,
-                &codespan_reporting::files::SimpleFile::new(
-                    if filename == "-" {
-                        "<stdin>"
-                    } else {
-                        filename.as_str()
-                    },
-                    &report,
-                ),
-                &weather_reports::parse::into_diagnostic(&err),
-            )
-            .unwrap();
-        }
-    }
-    if cfg!(feature = "trace") {
-        println!("[PEG_TRACE_STOP]");
-    }
+    let mut blocks = vec![ExcludeBlock::Daily, ExcludeBlock::Alerts];
+
+    let _forecast_request = ForecastRequestBuilder::new(api_key, LAT, LONG)
+        .exclude_block(ExcludeBlock::Hourly)
+        .exclude_blocks(&mut blocks)
+        .extend(ExtendBy::Hourly)
+        .lang(Lang::English)
+        .units(Units::SI)
+        .build();
+
+    let _time_machine_request = TimeMachineRequestBuilder::new(api_key, LAT, LONG, TIME)
+        .exclude_block(ExcludeBlock::Hourly)
+        .exclude_blocks(&mut blocks)
+        .lang(Lang::Arabic)
+        .units(Units::Imperial)
+        .build();
+
+    // let forecast_response = api_client.get_forecast(forecast_request).unwrap();
+    // let time_machine_response = api_client.get_time_machine(time_machine_request).unwrap();
 }
