@@ -11,8 +11,9 @@ const LAT: f64 = 6.66;
 const LONG: f64 = 66.6;
 const TIME: u64 = 666;
 
-#[tokio::main]
-async fn main() {
+use tokio::runtime::Runtime;
+
+fn main() {
     let api_key = "my_dark_sky_api_key"; // please don't actually hardcode your API key!
 
     let reqwest_client = Client::new();
@@ -35,8 +36,18 @@ async fn main() {
         .units(Units::Imperial)
         .build();
 
-    let forecast_response = api_client.get_forecast(forecast_request).await.unwrap();
-    //let time_machine_response = api_client.get_time_machine(time_machine_request).await.unwrap();
+
+    let forecast_response  = Runtime::new()
+    .expect("Failed to create Tokio runtime")
+    .block_on(api_client.get_forecast(forecast_request)).unwrap();
+
+
+    //let forecast_response = api_client.get_forecast(forecast_request).await.unwrap();
+    
+    let time_machine_response  = Runtime::new()
+    .expect("Failed to create Tokio runtime")
+    .block_on(api_client.get_time_machine(time_machine_request)).unwrap();
 
     println!("{}",forecast_response.status());
+    println!("{:?}",time_machine_response);
 }
